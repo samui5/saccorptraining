@@ -1,0 +1,153 @@
+--------------------------------------------------------------------------------------------------------------------------------------------
+----First Dropdown to change Measures of chart and table
+--------------------------------------------------------------------------------------------------------------------------------------------
+//step 1: get the value of selected key from dd
+var anubhav = DD_Measure_Select.getSelectedKey();
+
+if(anubhav === "Discount"){
+	Table_1.getDataSource().setDimensionFilter("Account",["[Account].[parentId].&[Discount]","[Account].[parentId].&[Gross_Margin]"]);
+	Chart_2.addMeasure("[Account].[parentId].&[Gross_Margin]",Feed.ValueAxis);
+	Chart_2.addMeasure("[Account].[parentId].&[Discount]",Feed.ValueAxis);
+	
+}else{
+	Table_1.getDataSource().setDimensionFilter("Account",["[Account].[parentId].&[Quantity_sold]","[Account].[parentId].&[Sales_Revenue]"]);
+	Chart_2.addMeasure("[Account].[parentId].&[Quantity_sold]",Feed.ValueAxis);
+	Chart_2.addMeasure("[Account].[parentId].&[Sales_Revenue]",Feed.ValueAxis);
+}
+
+if(DD1_Value === "Revenue"){
+	Chart_2.removeMeasure("[Account].[parentId].&[Quantity_sold]",Feed.ValueAxis);
+	Chart_2.removeMeasure("[Account].[parentId].&[Sales_Revenue]",Feed.ValueAxis);
+}else{
+	Chart_2.removeMeasure("[Account].[parentId].&[Discount]",Feed.ValueAxis);
+	Chart_2.removeMeasure("[Account].[parentId].&[Gross_Margin]",Feed.ValueAxis);
+}
+
+DD1_Value = anubhav;
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+----Second Dropdown to change the Dimensions and load the third one based on second for hierarchy
+----F12 is shortcut to see console
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+var sel = DD_Dimension.getSelectedKey();
+Table_1.removeDimension(V_PASTDIM);
+Table_1.addDimensionToRows(sel);
+
+Chart_2.removeDimension(V_PASTDIM, Feed.CategoryAxis);
+Chart_2.addDimension(sel,Feed.CategoryAxis);
+
+V_PASTDIM = sel;
+
+var hierarchies = Table_1.getDataSource().getHierarchies(sel);
+console.log(hierarchies);
+DD_HIER.removeAllItems();
+for(var i=0;i<hierarchies.length;i++){
+		DD_HIER.addItem(hierarchies[i].id, hierarchies[i].description);
+}
+
+var const_flat = "@FlatHierarchy";
+DD_HIER.setSelectedKey(const_flat);
+Table_1.getDataSource().setHierarchy(sel, const_flat);
+Chart_2.getDataSource().setHierarchy(sel, const_flat);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+----Third Dropdown for showing hierarchies and changing same in our table and chart
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+var hierType = DD_HIER.getSelectedKey();
+
+Table_1.getDataSource().setHierarchy(V_PASTDIM, hierType);
+Chart_2.getDataSource().setHierarchy(V_PASTDIM, hierType);
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+----Checkbox Selection to hide and show controls
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+var arr_all = CBG_SEL.getSelectedKeys();
+
+console.log(arr_all);
+
+Table_1.setVisible(false);
+Chart_2.setVisible(false);
+
+for(var i=0;i<arr_all.length;i++){
+	switch(arr_all[i]) {
+	  case "CHK_TAB":
+		// code block
+		Table_1.setVisible(true);
+		break;
+	  case "CHK_CHART":
+		// code block
+		Chart_2.setVisible(true);
+		break;
+	  default:
+		// code block
+	}	
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+----Popup Launch Code
+--------------------------------------------------------------------------------------------------------------------------------------------
+PopupChart.getDataSource().copyDimensionFilterFrom(Chart_1.getDataSource(),"City");
+
+Popup_1.open();
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+-----popup close code
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Popup_1.close();
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Basics of Object Traversal
+--------------------------------------------------------------------------------------------------------------------------------------------
+var obj = {"@MeasureDimension": "[Account].[parentId].&[Quantity_sold]",
+"City": "[City].[City_LBH].[City.Country].[India]" };
+
+for(item in obj){
+  if(item === "City"){
+     console.log("yes mujhe mil gaya");
+  }
+}
+
+for(item in obj){
+  if(item === "City"){
+     console.log(obj[item]);
+  }
+}
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Using Traversal for row select event
+--------------------------------------------------------------------------------------------------------------------------------------------
+var selections = Table_1.getSelections();
+var indexLast = selections.length - 1;
+var oSelectedItem = selections[indexLast];
+console.log(oSelectedItem);
+
+
+for(var item in oSelectedItem){
+  if(item === "City"){
+     console.log(oSelectedItem[item]);
+	 Chart_2.getDataSource().setDimensionFilter(item, oSelectedItem[item]);
+  }
+}
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+R Logic 
+--------------------------------------------------------------------------------------------------------------------------------------------
+Revenue <- Retail_Store_Demo_Data$`Sales Revenue`
+Qty <- Retail_Store_Demo_Data$`Quantity sold`
+plot(Revenue, Qty)
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+Calculate Correlation
+--------------------------------------------------------------------------------------------------------------------------------------------
+Revenue <- Retail_Store_Demo_Data$`Sales Revenue`
+Sold <- Retail_Store_Demo_Data$`Quantity sold`
+gmCorrelation <- cor(Revenue, Sold)
